@@ -1,0 +1,3 @@
+﻿Enable-Migrations
+Add-Migration AddIsDefault
+Update-Database -Verbose
