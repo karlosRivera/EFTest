@@ -25,6 +25,8 @@ namespace EFTest
             using (var db = new TestDBContext1())
             {
                 var customers = await db.Database.SqlQuery<Customer>("AllCustomers").ToListAsync();
+                //var customers = await db.Customer.SqlQuery("AllCustomers").ToListAsync();
+                //dataGridView1.DataSource = customers;
 
                 // we can use also firstasync if we are need to read first data from collection.
                 //var customers = await db.Database.SqlQuery<Customer>("AllCustomers").FirstAsync();
@@ -40,7 +42,7 @@ namespace EFTest
 
             using (var db = new TestDBContext1())
             {
-                SqlParameter param1 = new SqlParameter("@CustomerID", 3);
+                SqlParameter param1 = new SqlParameter("@CustomerID",  Convert.ToInt32(3));
                 var customers = await db.Database.SqlQuery<Customer>("AllCustomers @CustomerID",param1).ToListAsync();
             }
         }
@@ -49,14 +51,17 @@ namespace EFTest
         {
             using (var db = new TestDBContext1())
             {
-                SqlParameter param1 = new SqlParameter("@CustomerID", 0);
+                SqlParameter param1 = new SqlParameter("@CustomerID", Convert.ToInt32(0));
 
                 var outParam = new SqlParameter();
-                outParam.ParameterName = "Counter";
+                outParam.ParameterName = "@Counter";
                 outParam.SqlDbType = SqlDbType.Int;
                 outParam.Direction = ParameterDirection.Output;
 
                 var customers = await db.Database.SqlQuery<Customer>("DetailsANDCount @CustomerID, @Counter OUT", param1, outParam).ToListAsync();
+                dataGridView1.DataSource = customers;
+
+                MessageBox.Show("Total customer found " + outParam.Value);
             }
         }
     }
