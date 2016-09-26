@@ -87,7 +87,7 @@ namespace EFTest
                     // Read Blogs from the first result set 
                     var customers = ((IObjectContextAdapter) db)
                         .ObjectContext
-                        //.Translate<Customer>(reader, "Customers", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
+                       //.Translate<Customer>(reader, "Customers", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
                         .Translate<Customer>(reader);
 
 
