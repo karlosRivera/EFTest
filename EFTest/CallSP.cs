@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Core.Objects;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Data.SqlClient;
 using EFTest.demo1;
 
 namespace EFTest
@@ -63,6 +66,55 @@ namespace EFTest
 
                 MessageBox.Show("Total customer found " + outParam.Value);
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            using (var db = new TestDBContext1())
+            {
+                db.Database.Initialize(force: false);
+                // Create a SQL command to execute the sproc 
+                var cmd = db.Database.Connection.CreateCommand();
+                cmd.CommandText = "[dbo].[MultiResultSet]";
+
+                try
+                {
+
+                    db.Database.Connection.Open();
+                    // Run the sproc  
+                    var reader = cmd.ExecuteReader();
+
+                    // Read Blogs from the first result set 
+                    var customers = ((IObjectContextAdapter) db)
+                        .ObjectContext
+                        //.Translate<Customer>(reader, "Customers", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
+                        .Translate<Customer>(reader);
+
+
+                    foreach (var item in customers)
+                    {
+                        Console.WriteLine(item.FirstName);
+                    }
+
+                    // Move to second result set and read Posts 
+                    reader.NextResult();
+                    var Addresses = ((IObjectContextAdapter) db)
+                        .ObjectContext
+                        //.Translate<Addresses>(reader, "Addresses", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
+                        .Translate<Addresses>(reader);
+
+
+                    foreach (var item in Addresses)
+                    {
+                        Console.WriteLine(item.Address1);
+                    }
+                }
+                finally
+                {
+                    db.Database.Connection.Close();
+                }
+            }
+
         }
     }
 }
