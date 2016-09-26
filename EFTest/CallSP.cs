@@ -87,8 +87,8 @@ namespace EFTest
                     // Read Blogs from the first result set 
                     var customers = ((IObjectContextAdapter) db)
                         .ObjectContext
-                       //.Translate<Customer>(reader, "Customers", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
-                        .Translate<Customer>(reader);
+                       .Translate<Customer>(reader, "Customer", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
+                        //.Translate<Customer>(reader);
 
 
                     foreach (var item in customers)
@@ -100,8 +100,8 @@ namespace EFTest
                     reader.NextResult();
                     var Addresses = ((IObjectContextAdapter) db)
                         .ObjectContext
-                        //.Translate<Addresses>(reader, "Addresses", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
-                        .Translate<Addresses>(reader);
+                        .Translate<Addresses>(reader, "Addresses", System.Data.Entity.Core.Objects.MergeOption.AppendOnly);
+                        //.Translate<Addresses>(reader);
 
 
                     foreach (var item in Addresses)
