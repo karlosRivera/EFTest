@@ -17,7 +17,8 @@ namespace EFTest
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CallSP());
+            //Application.Run(new CallSP());
+            Application.Run(new Form1());
         }
     }
 }

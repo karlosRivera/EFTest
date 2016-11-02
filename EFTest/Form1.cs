@@ -25,6 +25,7 @@ namespace EFTest
 
         private void btnSave_Click(object sender, EventArgs e)
         {
+            /*
             using (var db = new TestDBContext())
             {
                 var customer = new Customer
@@ -48,7 +49,7 @@ namespace EFTest
                         {
                             Address1 = "test add3",
                             Address2 = "test add3",
-                            IsDefault=true,
+                            IsDefault=false,
                             Contacts =  new List<Contacts>
                             {
                                new Contacts {  Phone = "33333333", Fax = "1-33333333",IsDefault=false },
@@ -61,6 +62,80 @@ namespace EFTest
 
                 db.Customer.Add(customer);
                 db.SaveChanges();
+
+                int id = customer.CustomerID;
+            }
+             */
+
+            using (var db = new TestDBContext())
+            {
+                var customer = new Customer
+                {
+                    FirstName = "Test Customer1",
+                    LastName = "Test Customer1",
+
+                };
+
+                db.Customer.Add(customer);
+                db.SaveChanges();
+                int CustomerID = customer.CustomerID;
+
+                Addresses oAdr = new Addresses();
+                oAdr.Address1 = "test add1";
+                oAdr.Address2 = "test add2";
+                oAdr.IsDefault = true;
+                oAdr.CustomerID = CustomerID;
+                oAdr.SerialNo = 1;
+                db.Addresses.Add(oAdr);
+                db.SaveChanges();
+                int AddressID = oAdr.AddressID;
+
+                Contacts oContacts = new Contacts();
+                oContacts.Phone = "1111111";
+                oContacts.Fax = "1-1111111";
+                oContacts.SerialNo = 1;
+                oContacts.IsDefault = true;
+                oContacts.AddressID = AddressID;
+                db.Contacts.Add(oContacts);
+                db.SaveChanges();
+
+                oContacts = new Contacts();
+                oContacts.Phone = "222222222";
+                oContacts.Fax = "2-1111111";
+                oContacts.SerialNo = 2;
+                oContacts.IsDefault = false;
+                oContacts.AddressID = AddressID;
+                db.Contacts.Add(oContacts);
+                db.SaveChanges();
+
+                oAdr = new Addresses();
+                oAdr.Address1 = "test add3";
+                oAdr.Address2 = "test add3";
+                oAdr.SerialNo = 2;
+                oAdr.IsDefault = false;
+                oAdr.CustomerID = CustomerID;
+                db.Addresses.Add(oAdr);
+                db.SaveChanges();
+                AddressID = oAdr.AddressID;
+
+                oContacts = new Contacts();
+                oContacts.Phone = "33333333";
+                oContacts.Fax = "3-1111111";
+                oContacts.IsDefault = true;
+                oContacts.SerialNo = 1;
+                oContacts.AddressID = AddressID;
+                db.Contacts.Add(oContacts);
+                db.SaveChanges();
+
+                oContacts = new Contacts();
+                oContacts.Phone = "444444444";
+                oContacts.Fax = "4-1111111";
+                oContacts.SerialNo = 2;
+                oContacts.IsDefault = false;
+                oContacts.AddressID = AddressID;
+                db.Contacts.Add(oContacts);
+                db.SaveChanges();
+
             }
         }
 
@@ -81,7 +156,7 @@ namespace EFTest
                                                           select ad,
 
                                           }).ToList();
-
+#region
             //var bsCustomer1 = (from c in db.Customer
             //                             where (c.CustomerID == 2)
             //                             select new 
@@ -146,6 +221,8 @@ namespace EFTest
 
             //var cc = bsCustomer1[0].FirstName;
             //var cc1 = bsCustomer1[0].Addresses.Select(x => x.Address1).SingleOrDefault();
+#endregion
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -164,10 +241,16 @@ namespace EFTest
         public string FirstName { get; set; }
         public string LastName { get; set; }
 
+        [NotMapped]
         public string Address1 { get; set; }
+
+        [NotMapped]
         public string Address2 { get; set; }
 
+        [NotMapped]
         public string Phone { get; set; }
+
+        [NotMapped]
         public string Fax { get; set; }
 
     }
@@ -176,6 +259,7 @@ namespace EFTest
     {
         public virtual List<Addresses> Addresses { get; set; }
     }
+
     public class Addresses
     {
         [Key]
@@ -183,12 +267,13 @@ namespace EFTest
         public string Address1 { get; set; }
         public string Address2 { get; set; }
         public bool IsDefault { get; set; }
-
+        public int SerialNo { get; set; }
         public virtual List<Contacts> Contacts { get; set; }
 
         public int CustomerID { get; set; }
         public virtual Customer Customer { get; set; }
     }
+
     public class Contacts
     {
         [Key]
@@ -197,6 +282,7 @@ namespace EFTest
         public string Phone { get; set; }
         public string Fax { get; set; }
         public bool IsDefault { get; set; }
+        public int SerialNo { get; set; }
 
         public int AddressID { get; set; }
         public virtual Addresses Customer { get; set; } 
