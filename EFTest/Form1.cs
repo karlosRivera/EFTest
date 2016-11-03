@@ -41,8 +41,8 @@ namespace EFTest
                             IsDefault=true,
                             Contacts =  new List<Contacts>
                             {
-                               new Contacts {  Phone = "1111111", Fax = "1-1111111",IsDefault=true },
-                               new Contacts {  Phone = "2222222", Fax = "1-2222222",IsDefault=false  }
+                               new Contacts {  Phone = "1111111", Fax = "1-1111111",IsDefault=true, SerialNo=1 },
+                               new Contacts {  Phone = "2222222", Fax = "1-2222222",IsDefault=false, SerialNo=2  }
                             }
                         },
                         new Addresses
@@ -52,8 +52,8 @@ namespace EFTest
                             IsDefault=false,
                             Contacts =  new List<Contacts>
                             {
-                               new Contacts {  Phone = "33333333", Fax = "1-33333333",IsDefault=false },
-                               new Contacts {  Phone = "33333333", Fax = "1-33333333",IsDefault=true  }
+                               new Contacts {  Phone = "33333333", Fax = "1-33333333",IsDefault=false, SerialNo=1 },
+                               new Contacts {  Phone = "33333333", Fax = "1-33333333",IsDefault=true, SerialNo=2  }
                             }
                         }
 
@@ -69,6 +69,7 @@ namespace EFTest
 
             using (var db = new TestDBContext())
             {
+                //db.Customer.Where(e=> e.)
                 var customer = new Customer
                 {
                     FirstName = "Test Customer1",
@@ -136,6 +137,94 @@ namespace EFTest
                 db.Contacts.Add(oContacts);
                 db.SaveChanges();
 
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // for update operation
+
+            using (var db = new TestDBContext())
+            {
+                var existingCustomer = db.Customer
+                .Include(a => a.Addresses.Select(x=> x.Contacts))
+                .FirstOrDefault(p => p.CustomerID == 5);
+
+                existingCustomer.FirstName = "Test Customer122";
+
+                foreach (var Custaddress in existingCustomer.Addresses.Where(a => a.AddressID == 5))
+                {
+                    Custaddress.Address1 = "test add1-22";
+                    foreach (var CustContacts in Custaddress.Contacts.Where(a => a.ContactID == 5))
+                     {
+                         CustContacts.Phone = "1111111-22";
+                     }
+                }
+
+                db.SaveChanges();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Addresses CurrentAddress = null;
+            Contacts CurrentContacts = null;
+
+            using (var db = new TestDBContext())
+            {
+                var existingCustomer = db.Customer
+                .Include(a => a.Addresses.Select(x => x.Contacts))
+                .FirstOrDefault(p => p.CustomerID == 5);
+
+                existingCustomer.FirstName = "Test Customer122";
+
+                // selecting address
+                foreach (var existingAddress in existingCustomer.Addresses.Where(a => a.AddressID == 5).ToList())
+                {
+                    CurrentAddress = existingAddress;
+                    //if (existingCustomer.Addresses.Any(c => c.AddressID == existingAddress.AddressID))
+                        db.Addresses.Remove(existingAddress);
+                }
+
+                Addresses oAdrModel = new Addresses();
+                if (CurrentAddress != null)
+                {
+                    oAdrModel.Address1 = "test add2";
+                    oAdrModel.Address2 = "test add2";
+                    oAdrModel.SerialNo = 3;
+                    oAdrModel.IsDefault = true;
+                    oAdrModel.CustomerID = existingCustomer.CustomerID;
+                    db.Entry(CurrentAddress).CurrentValues.SetValues(oAdrModel);
+                }
+                else
+                {
+                    db.Addresses.Add(oAdrModel);
+                }
+
+                // selecting contacts
+                foreach (var existingContacts in existingCustomer.Addresses.SelectMany(a => a.Contacts.Where(cc=> cc.ContactID==5)))
+                {
+                    CurrentContacts = existingContacts;
+                    db.Contacts.Remove(CurrentContacts);
+                }
+
+                Contacts ContactModel = new Contacts();
+                if (CurrentContacts != null)
+                {
+                    ContactModel.Phone = "1111111-33";
+                    ContactModel.Fax = "1-1111111";
+                    ContactModel.SerialNo = 4;
+                    ContactModel.IsDefault = true;
+                    ContactModel.AddressID = CurrentAddress.AddressID; 
+                    db.Entry(CurrentAddress).CurrentValues.SetValues(oAdrModel);
+                }
+                else
+                {
+                    db.Contacts.Add(ContactModel);
+                }
+
+
+                db.SaveChanges();
             }
         }
 
@@ -233,6 +322,10 @@ namespace EFTest
                 var listMyViews1 = db.vwMyCustomers.ToList();
             }
         }
+
+
+
+ 
     }
 
     public class CustomerBase
