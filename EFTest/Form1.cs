@@ -12,6 +12,13 @@ using System.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Entity.ModelConfiguration;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity.Infrastructure;
+using System.Reflection;
+using System.Data.EntityClient;
+using System.Data.Objects;
+using System.Globalization;
+using System.Data.Common;
+using System.Data.SqlClient;
 
 namespace EFTest
 {
@@ -156,9 +163,9 @@ namespace EFTest
                 {
                     Custaddress.Address1 = "test add1-22";
                     foreach (var CustContacts in Custaddress.Contacts.Where(a => a.ContactID == 5))
-                     {
-                         CustContacts.Phone = "1111111-22";
-                     }
+                    {
+                        CustContacts.Phone = "1111111-22";
+                    }
                 }
 
                 db.SaveChanges();
@@ -167,62 +174,39 @@ namespace EFTest
 
         private void button3_Click(object sender, EventArgs e)
         {
-            Addresses CurrentAddress = null;
-            Contacts CurrentContacts = null;
+            //Addresses CurrentAddress = null;
+            //Contacts CurrentContacts = null;
 
             using (var db = new TestDBContext())
             {
+                //db.Database.Log = s => MyLogger.Log("EFApp", s);
+
                 var existingCustomer = db.Customer
                 .Include(a => a.Addresses.Select(x => x.Contacts))
                 .FirstOrDefault(p => p.CustomerID == 5);
 
-                existingCustomer.FirstName = "Test Customer122";
+                existingCustomer.FirstName = "Test Customer123";
 
-                // selecting address
-                foreach (var existingAddress in existingCustomer.Addresses.Where(a => a.AddressID == 5).ToList())
-                {
-                    CurrentAddress = existingAddress;
-                    //if (existingCustomer.Addresses.Any(c => c.AddressID == existingAddress.AddressID))
-                        db.Addresses.Remove(existingAddress);
-                }
+                existingCustomer.Addresses.Where(a => a.AddressID == 5).ToList().ForEach(r => db.Addresses.Remove(r));
+                existingCustomer.Addresses.Where(a => a.AddressID == 5).SelectMany(ad => ad.Contacts).Where(c=> c.ContactID==5).ToList().ForEach(r => db.Contacts.Remove(r));
 
                 Addresses oAdrModel = new Addresses();
-                if (CurrentAddress != null)
-                {
-                    oAdrModel.Address1 = "test add2";
-                    oAdrModel.Address2 = "test add2";
-                    oAdrModel.SerialNo = 3;
-                    oAdrModel.IsDefault = true;
-                    oAdrModel.CustomerID = existingCustomer.CustomerID;
-                    db.Entry(CurrentAddress).CurrentValues.SetValues(oAdrModel);
-                }
-                else
-                {
-                    db.Addresses.Add(oAdrModel);
-                }
-
-                // selecting contacts
-                foreach (var existingContacts in existingCustomer.Addresses.SelectMany(a => a.Contacts.Where(cc=> cc.ContactID==5)))
-                {
-                    CurrentContacts = existingContacts;
-                    db.Contacts.Remove(CurrentContacts);
-                }
+                oAdrModel.Address1 = "test xxx";
+                oAdrModel.Address2 = "test xxx";
+                oAdrModel.SerialNo = 3;
+                oAdrModel.IsDefault = true;
+                oAdrModel.CustomerID = 5;
+                db.Addresses.Add(oAdrModel);
+                db.SaveChanges();
+                int CurAddressID = oAdrModel.AddressID;
 
                 Contacts ContactModel = new Contacts();
-                if (CurrentContacts != null)
-                {
-                    ContactModel.Phone = "1111111-33";
-                    ContactModel.Fax = "1-1111111";
-                    ContactModel.SerialNo = 4;
-                    ContactModel.IsDefault = true;
-                    ContactModel.AddressID = CurrentAddress.AddressID; 
-                    db.Entry(CurrentAddress).CurrentValues.SetValues(oAdrModel);
-                }
-                else
-                {
-                    db.Contacts.Add(ContactModel);
-                }
-
+                ContactModel.Phone = "XX-1111111-33";
+                ContactModel.Fax = "XX-1-1111111";
+                ContactModel.SerialNo = 4;
+                ContactModel.IsDefault = true;
+                ContactModel.AddressID = CurAddressID;
+                db.Contacts.Add(ContactModel);
 
                 db.SaveChanges();
             }
@@ -364,6 +348,7 @@ namespace EFTest
         public virtual List<Contacts> Contacts { get; set; }
 
         public int CustomerID { get; set; }
+        //[ForeignKey("CustomerID")]
         public virtual Customer Customer { get; set; }
     }
 
@@ -376,8 +361,9 @@ namespace EFTest
         public string Fax { get; set; }
         public bool IsDefault { get; set; }
         public int SerialNo { get; set; }
-
         public int AddressID { get; set; }
+
+        //[ForeignKey("AddressID")]
         public virtual Addresses Customer { get; set; } 
 
     }
@@ -412,7 +398,66 @@ namespace EFTest
         public TestDBContext()
             : base("name=TestDBContext")
         {
+            //((IObjectContextAdapter)this).ObjectContext.SavingChanges += new EventHandler(objContext_SavingChanges);
         }
+
+        //public void objContext_SavingChanges(object sender, EventArgs e)
+        //{
+        //    var commandText = new StringBuilder();
+
+        //    var conn = sender.GetType()
+        //         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        //         .Where(p => p.Name == "Connection")
+        //         .Select(p => p.GetValue(sender, null))
+        //         .SingleOrDefault();
+        //    var entityConn = (EntityConnection)conn;
+
+        //    var objStateManager = (ObjectStateManager)sender.GetType()
+        //          .GetProperty("ObjectStateManager", BindingFlags.Instance | BindingFlags.Public)
+        //          .GetValue(sender, null);
+
+        //    var workspace = entityConn.GetMetadataWorkspace();
+
+        //    var translatorT =
+        //        sender.GetType().Assembly.GetType("System.Data.Mapping.Update.Internal.UpdateTranslator");
+
+        //    var translator = Activator.CreateInstance(translatorT, BindingFlags.Instance |
+        //        BindingFlags.NonPublic, null, new object[] {objStateManager,workspace,
+        //    entityConn,entityConn.ConnectionTimeout }, CultureInfo.InvariantCulture);
+
+        //    var produceCommands = translator.GetType().GetMethod(
+        //        "ProduceCommands", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        //    var commands = (IEnumerable<object>)produceCommands.Invoke(translator, null);
+
+        //    foreach (var cmd in commands)
+        //    {
+        //        var identifierValues = new Dictionary<int, object>();
+        //        var dcmd =
+        //            (DbCommand)cmd.GetType()
+        //               .GetMethod("CreateCommand", BindingFlags.Instance | BindingFlags.NonPublic)
+        //               .Invoke(cmd, new[] { translator, identifierValues });
+
+        //        foreach (DbParameter param in dcmd.Parameters)
+        //        {
+        //            var sqlParam = (SqlParameter)param;
+
+        //            commandText.AppendLine(String.Format("declare {0} {1} {2}",
+        //                                                    sqlParam.ParameterName,
+        //                                                    sqlParam.SqlDbType.ToString().ToLower(),
+        //                                                    sqlParam.Size > 0 ? "(" + sqlParam.Size + ")" : ""));
+
+        //            commandText.AppendLine(String.Format("set {0} = '{1}'", sqlParam.ParameterName, sqlParam.SqlValue));
+        //        }
+
+        //        commandText.AppendLine();
+        //        commandText.AppendLine(dcmd.CommandText);
+        //        commandText.AppendLine("go");
+        //        commandText.AppendLine();
+        //    }
+
+        //    System.Diagnostics.Debug.Write(commandText.ToString());
+        //}
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -425,5 +470,13 @@ namespace EFTest
         public DbSet<Contacts> Contacts { get; set; }
         public virtual DbSet<vwCustomer> vwCustomers { get; set; }
         public DbSet<vwMyCustomers> vwMyCustomers { get; set; }
+    }
+
+    public class MyLogger
+    {
+        public static void Log(string component, string message)
+        {
+            Console.WriteLine("Component: {0} Message: {1} ", component, message);
+        }
     }
 }
