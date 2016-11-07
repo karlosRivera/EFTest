@@ -76,7 +76,6 @@ namespace EFTest
 
             using (var db = new TestDBContext())
             {
-                //db.Customer.Where(e=> e.)
                 var customer = new Customer
                 {
                     FirstName = "Test Customer1",
@@ -185,28 +184,33 @@ namespace EFTest
                 .Include(a => a.Addresses.Select(x => x.Contacts))
                 .FirstOrDefault(p => p.CustomerID == 5);
 
-                existingCustomer.FirstName = "Test Customer123";
+                existingCustomer.FirstName = "New Customer";
 
                 existingCustomer.Addresses.Where(a => a.AddressID == 5).ToList().ForEach(r => db.Addresses.Remove(r));
                 existingCustomer.Addresses.Where(a => a.AddressID == 5).SelectMany(ad => ad.Contacts).Where(c=> c.ContactID==5).ToList().ForEach(r => db.Contacts.Remove(r));
 
                 Addresses oAdrModel = new Addresses();
-                oAdrModel.Address1 = "test xxx";
-                oAdrModel.Address2 = "test xxx";
+                oAdrModel.Address1 = "New test xxx";
+                oAdrModel.Address2 = "New test xxx";
                 oAdrModel.SerialNo = 3;
                 oAdrModel.IsDefault = true;
-                oAdrModel.CustomerID = 5;
-                db.Addresses.Add(oAdrModel);
-                db.SaveChanges();
-                int CurAddressID = oAdrModel.AddressID;
+                oAdrModel.Contacts = new List<Contacts>();
+                //oAdrModel.CustomerID = 5;
+                existingCustomer.Addresses.Add(oAdrModel);
+                //db.Addresses.Add(oAdrModel);
+                //db.SaveChanges();
+                //int CurAddressID = oAdrModel.AddressID;
 
                 Contacts ContactModel = new Contacts();
-                ContactModel.Phone = "XX-1111111-33";
-                ContactModel.Fax = "XX-1-1111111";
+                ContactModel.Phone = "New XX-1111111-33";
+                ContactModel.Fax = "New XX-1-1111111";
                 ContactModel.SerialNo = 4;
                 ContactModel.IsDefault = true;
-                ContactModel.AddressID = CurAddressID;
-                db.Contacts.Add(ContactModel);
+                //ContactModel.Addresses = oAdrModel;
+                oAdrModel.Contacts.Add(ContactModel);
+
+                //ContactModel.AddressID = CurAddressID;
+                //db.Contacts.Add(ContactModel);
 
                 db.SaveChanges();
             }
@@ -364,7 +368,7 @@ namespace EFTest
         public int AddressID { get; set; }
 
         //[ForeignKey("AddressID")]
-        public virtual Addresses Customer { get; set; } 
+        public virtual Addresses Addresses { get; set; } 
 
     }
 
